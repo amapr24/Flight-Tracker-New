@@ -210,3 +210,107 @@ test('history is returned for a watch that has some', async () => {
     { seed: { defaults: {}, watches: [{ id: 'seeded', ...base }] } },
   );
 });
+
+test('editing alert settings coerces form strings to numbers', async () => {
+  await withServer(
+    async ({ call }) => {
+      // A browser form sends everything as a string; the numeric validators in
+      // config.js would reject those outright without coercion.
+      const { status, body } = await call('/api/watches/w1', {
+        method: 'PATCH',
+        body: { intervalMinutes: '60', alert: { targetPrice: '175', dropPercent: '12' } },
+      });
+
+      assert.equal(status, 200);
+      assert.equal(body.watch.intervalMinutes, 60);
+      assert.equal(body.watch.alert.targetPrice, 175);
+      assert.equal(body.watch.alert.dropPercent, 12);
+    },
+    { seed: { defaults: {}, watches: [{ id: 'w1', ...base }] } },
+  );
+});
+
+test('an alert edit preserves the fields it does not mention', async () => {
+  await withServer(
+    async ({ call }) => {
+      const { body } = await call('/api/watches/w1', {
+        method: 'PATCH',
+        body: { alert: { targetPrice: 150 } },
+      });
+      assert.equal(body.watch.alert.targetPrice, 150);
+      assert.equal(body.watch.alert.dropAmount, 40, 'untouched alert fields survive');
+      assert.equal(body.watch.intervalMinutes, 45, 'untouched watch fields survive');
+    },
+    {
+      seed: {
+        defaults: {},
+        watches: [{ id: 'w1', ...base, intervalMinutes: 45, alert: { targetPrice: 300, dropAmount: 40 } }],
+      },
+    },
+  );
+});
+
+test('a target price can be cleared', async () => {
+  await withServer(
+    async ({ call }) => {
+      const { body } = await call('/api/watches/w1', {
+        method: 'PATCH',
+        body: { alert: { targetPrice: null } },
+      });
+      assert.equal(body.watch.alert.targetPrice, null);
+    },
+    { seed: { defaults: {}, watches: [{ id: 'w1', ...base, alert: { targetPrice: 300 } }] } },
+  );
+});
+
+test('route and dates are refused, with an explanation', async () => {
+  await withServer(
+    async ({ call }) => {
+      for (const patch of [{ depart: '2026-09-01' }, { to: 'LAX' }, { from: 'BOS' }, { return: '2026-09-10' }]) {
+        const { status, body } = await call('/api/watches/w1', { method: 'PATCH', body: patch });
+        assert.equal(status, 400, `${Object.keys(patch)[0]} must be rejected`);
+        assert.match(body.error, /cannot be changed|history/i);
+      }
+      // The watch is untouched after every rejection.
+      const state = await call('/api/state');
+      assert.equal(state.body.watches[0].depart, '2026-08-15');
+      assert.equal(state.body.watches[0].to, 'JFK');
+    },
+    { seed: { defaults: {}, watches: [{ id: 'w1', ...base }] } },
+  );
+});
+
+test('an edit with no editable fields is rejected rather than silently doing nothing', async () => {
+  await withServer(
+    async ({ call }) => {
+      const { status, body } = await call('/api/watches/w1', { method: 'PATCH', body: { nonsense: 1 } });
+      assert.equal(status, 400);
+      assert.match(body.error, /No editable fields/);
+    },
+    { seed: { defaults: {}, watches: [{ id: 'w1', ...base }] } },
+  );
+});
+
+test('a non-numeric value for a numeric field is refused', async () => {
+  await withServer(
+    async ({ call }) => {
+      const { status, body } = await call('/api/watches/w1', {
+        method: 'PATCH',
+        body: { alert: { targetPrice: 'cheap please' } },
+      });
+      assert.equal(status, 400);
+      assert.match(body.error, /must be a number/);
+    },
+    { seed: { defaults: {}, watches: [{ id: 'w1', ...base }] } },
+  );
+});
+
+test('pause and resume still work through the same endpoint', async () => {
+  await withServer(
+    async ({ call }) => {
+      assert.equal((await call('/api/watches/w1', { method: 'PATCH', body: { enabled: false } })).body.watch.enabled, false);
+      assert.equal((await call('/api/watches/w1', { method: 'PATCH', body: { enabled: true } })).body.watch.enabled, true);
+    },
+    { seed: { defaults: {}, watches: [{ id: 'w1', ...base }] } },
+  );
+});

@@ -154,7 +154,7 @@ export function createServer({ store, configPath, notifier, onConfigChange, noti
 
     ['PATCH', /^\/api\/watches\/([^/]+)$/, async (req, m) => {
       const body = await readJsonBody(req);
-      const { config, watch } = watchFile.update(decodeURIComponent(m[1]), body);
+      const { config, watch } = watchFile.update(decodeURIComponent(m[1]), normalisePatch(body));
       publish(config);
       return { watch: decorate(watch) };
     }],
@@ -249,6 +249,75 @@ async function serveStatic(pathname, res) {
   } catch {
     json(res, 404, { error: 'Not found' });
   }
+}
+
+/**
+ * Route and dates are deliberately not editable.
+ *
+ * Price history is keyed to the watch id and represents one specific trip.
+ * Repointing a watch at a different date would silently attach the old prices
+ * to a journey they were never quotes for — the all-time low, the averages and
+ * the charts would all become quietly wrong. Changing a trip means a new watch.
+ */
+const IMMUTABLE_FIELDS = ['from', 'to', 'depart', 'return', 'id'];
+
+const EDITABLE_FIELDS = ['label', 'intervalMinutes', 'maxStops', 'trackNonstopOnly', 'enabled', 'seat', 'adults'];
+
+const EDITABLE_ALERT_FIELDS = [
+  'targetPrice',
+  'dropPercent',
+  'dropAmount',
+  'cooldownMinutes',
+  'notifyOnNewLow',
+  'notifyOnRise',
+  'notifyOnFirstSeen',
+];
+
+const NUMERIC = new Set([
+  'intervalMinutes',
+  'adults',
+  'targetPrice',
+  'dropPercent',
+  'dropAmount',
+  'cooldownMinutes',
+]);
+
+/**
+ * Allowlists and type-coerces an edit. Form fields arrive as strings, which the
+ * numeric validators in config.js would otherwise reject.
+ */
+function normalisePatch(body) {
+  const attempted = IMMUTABLE_FIELDS.filter((f) => f in body);
+  if (attempted.length) {
+    throw new HttpError(
+      400,
+      `${attempted.join(' and ')} cannot be changed on an existing watch — the recorded price ` +
+        `history belongs to this exact trip. Create a new watch instead.`,
+    );
+  }
+
+  const coerce = (key, value) => {
+    if (!NUMERIC.has(key)) return value;
+    if (value === '' || value === null) return null;
+    const n = Number(value);
+    if (!Number.isFinite(n)) throw new HttpError(400, `${key} must be a number, got "${value}"`);
+    return n;
+  };
+
+  const patch = {};
+  for (const key of EDITABLE_FIELDS) {
+    if (key in body) patch[key] = coerce(key, body[key]);
+  }
+
+  if (body.alert && typeof body.alert === 'object') {
+    patch.alert = {};
+    for (const key of EDITABLE_ALERT_FIELDS) {
+      if (key in body.alert) patch.alert[key] = coerce(key, body.alert[key]);
+    }
+  }
+
+  if (Object.keys(patch).length === 0) throw new HttpError(400, 'No editable fields in the request');
+  return patch;
 }
 
 /** Maps the UI's form payload onto the shape config.js expects. */

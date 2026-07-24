@@ -687,6 +687,104 @@ select {
 }
 .stat dd.is-low { color: var(--green); }
 
+/* ── Edit form ──────────────────────────────────────────────── */
+
+.edit { display: flex; flex-direction: column; gap: 14px; }
+.edit__row { display: flex; gap: 12px; flex-wrap: wrap; }
+.edit__row > .efield { flex: 1 1 0; min-width: 96px; }
+
+.efield { display: flex; flex-direction: column; }
+
+.efield__label {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 6px;
+}
+
+.efield input,
+.efield select {
+  width: 100%;
+  background: var(--ink);
+  border: 1px solid var(--line-strong);
+  border-radius: var(--r);
+  padding: 9px 11px;
+  font-family: var(--mono);
+  font-size: 14px;
+  outline: none;
+  transition: border-color 0.16s, box-shadow 0.16s;
+}
+
+.efield input:focus,
+.efield select:focus {
+  border-color: var(--amber);
+  box-shadow: 0 0 0 3px var(--amber-soft);
+}
+
+.efield__hint { margin-top: 5px; font-size: 11px; color: var(--muted-2); }
+
+.edit__checks {
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+  padding: 13px 0 3px;
+  border-top: 1px solid var(--line);
+}
+
+.echeck {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  font-size: 13px;
+  color: var(--text);
+  cursor: pointer;
+}
+
+.echeck input {
+  appearance: none;
+  width: 15px;
+  height: 15px;
+  flex: none;
+  border: 1px solid var(--line-strong);
+  border-radius: 2px;
+  background: var(--ink);
+  cursor: pointer;
+  transition: background 0.14s, border-color 0.14s;
+}
+.echeck input:checked {
+  background: var(--amber);
+  border-color: var(--amber);
+}
+.echeck input:checked::after {
+  content: "✓";
+  display: block;
+  color: #16120a;
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 13px;
+  text-align: center;
+}
+.echeck input:focus-visible { box-shadow: 0 0 0 3px var(--amber-soft); }
+
+.edit__actions {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
+  padding-top: 14px;
+  border-top: 1px solid var(--line);
+}
+
+.edit__note {
+  margin: 0;
+  flex: 1 1 200px;
+  font-size: 11.5px;
+  line-height: 1.5;
+  color: var(--muted-2);
+}
+
 .kv { list-style: none; margin: 0; padding: 0; font-size: 13px; }
 .kv li {
   display: flex;

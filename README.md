@@ -342,7 +342,7 @@ need a `pushoverUser` field per watch, which isn't built yet.
 npm test
 ```
 
-128 tests. Parsing runs against a real captured Google Flights response (`test/fixtures/`), so a change in Google's markup fails the suite rather than silently producing no prices. The server tests boot the real HTTP server on an ephemeral port and include the Host/Origin guards.
+135 tests. Parsing runs against a real captured Google Flights response (`test/fixtures/`), so a change in Google's markup fails the suite rather than silently producing no prices. The server tests boot the real HTTP server on an ephemeral port and include the Host/Origin guards.
 
 ## How it works
 

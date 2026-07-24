@@ -313,15 +313,12 @@ function detail(w) {
   );
 
   const facts = el('ul', { className: 'kv' },
-    row2('Target price', w.alert?.targetPrice != null ? money(w.alert.targetPrice, currency) : 'not set'),
-    row2('Alert on drop', `${w.alert?.dropPercent ?? 8}% or ${money(w.alert?.dropAmount ?? 25, currency)}`),
-    row2('Interval', `every ${w.intervalMinutes} min`),
-    row2('Cabin', `${w.seat.replace('-', ' ')} · ${w.adults} adult${w.adults === 1 ? '' : 's'}`),
-    row2('Stops', w.maxStops == null ? 'any' : w.maxStops === 'nonstop' ? 'nonstop only' : `${w.maxStops} or fewer`),
     best ? row2('Current best', `${best.airlines} · ${stopsLabel(best.stops)} · ${best.durationText}`) : null,
     best?.departTime ? row2('Departs', `${best.departTime} → ${best.arriveTime}`) : null,
+    best?.flightNumbers?.length ? row2('Flight', best.flightNumbers.join(', ')) : null,
     w.latest?.priceLevel ? row2('Google says', `prices are ${w.latest.priceLevel}`) : null,
     w.latest ? row2('Last checked', ago(w.latest.observedAt)) : null,
+    row2('Cabin', `${w.seat.replace('-', ' ')} · ${w.adults} adult${w.adults === 1 ? '' : 's'}`),
   );
 
   const link = el('a', { className: 'btn btn--icon', href: w.searchUrl, target: '_blank', rel: 'noopener noreferrer' },
@@ -330,8 +327,18 @@ function detail(w) {
   link.style.marginTop = '14px';
   link.style.textDecoration = 'none';
 
-  const left = el('div', {}, el('h3', { className: 'panel-title' }, 'Price history'), priceChart(w.series, currency));
-  const right = el('div', {}, el('h3', { className: 'panel-title' }, 'Settings & latest'), stats, facts, link);
+  const left = el('div', {},
+    el('h3', { className: 'panel-title' }, 'Price history'),
+    priceChart(w.series, currency),
+    el('h3', { className: 'panel-title', style: { marginTop: '22px' } }, 'Latest check'),
+    facts,
+    link,
+  );
+  const right = el('div', {},
+    el('h3', { className: 'panel-title' }, 'Alert settings'),
+    stats,
+    editForm(w, currency),
+  );
 
   const wrap = el('div', { className: 'row__detail' }, el('div', { className: 'detail__grid' }, left, right));
   if (w.failing >= 3) {
@@ -341,6 +348,129 @@ function detail(w) {
 }
 
 const row2 = (k, v) => el('li', {}, el('span', {}, k), el('span', {}, v));
+
+/* ── Editing a watch ──────────────────────────────────────────── */
+
+const field = (label, control, hint) =>
+  el('label', { className: 'efield' },
+    el('span', { className: 'efield__label' }, label),
+    control,
+    hint ? el('span', { className: 'efield__hint' }, hint) : null,
+  );
+
+function numberInput(name, value, { min = 0, step = 1, placeholder = '' } = {}) {
+  return el('input', {
+    type: 'number',
+    name,
+    value: value ?? '',
+    min: String(min),
+    step: String(step),
+    placeholder,
+  });
+}
+
+function selectInput(name, value, options) {
+  const sel = el('select', { name });
+  for (const [val, text] of options) {
+    const opt = el('option', { value: val }, text);
+    // Compare as strings so 1 and "1" both match the saved value.
+    if (String(val) === String(value ?? '')) opt.selected = true;
+    sel.append(opt);
+  }
+  return sel;
+}
+
+function checkboxInput(name, checked) {
+  return el('input', { type: 'checkbox', name, checked: Boolean(checked) });
+}
+
+/**
+ * Route and dates are absent on purpose: price history is keyed to the watch
+ * and belongs to one specific trip, so repointing it at new dates would make
+ * every recorded price a quote for a journey it never described. The server
+ * rejects those fields too, rather than trusting the UI to hide them.
+ */
+function editForm(w, currency) {
+  const a = w.alert ?? {};
+  const form = el('form', { className: 'edit' });
+
+  form.append(
+    field('Label', el('input', { type: 'text', name: 'label', value: w.label ?? '', placeholder: `${w.from} → ${w.to}` })),
+    el('div', { className: 'edit__row' },
+      field(`Target price (${currency})`, numberInput('targetPrice', a.targetPrice, { placeholder: 'none' }), 'High-priority alert'),
+      field('Check every', selectInput('intervalMinutes', w.intervalMinutes, [
+        [15, '15 minutes'], [20, '20 minutes'], [30, '30 minutes'],
+        [60, '1 hour'], [180, '3 hours'], [360, '6 hours'],
+      ])),
+    ),
+    el('div', { className: 'edit__row' },
+      field('Drop %', numberInput('dropPercent', a.dropPercent ?? 8), 'Either triggers'),
+      field(`Drop ${currency}`, numberInput('dropAmount', a.dropAmount ?? 25)),
+      field('Cooldown', numberInput('cooldownMinutes', a.cooldownMinutes ?? 180), 'minutes'),
+    ),
+    el('div', { className: 'edit__row' },
+      field('Stops', selectInput('maxStops', w.maxStops, [
+        ['', 'Any'], ['nonstop', 'Nonstop only'], [1, '1 or fewer'], [2, '2 or fewer'],
+      ])),
+    ),
+    el('div', { className: 'edit__checks' },
+      el('label', { className: 'echeck' }, checkboxInput('notifyOnNewLow', a.notifyOnNewLow ?? true), el('span', {}, 'Alert on a new all-time low')),
+      el('label', { className: 'echeck' }, checkboxInput('notifyOnRise', a.notifyOnRise ?? false), el('span', {}, 'Alert when the price rises')),
+      el('label', { className: 'echeck' }, checkboxInput('trackNonstopOnly', w.trackNonstopOnly), el('span', {}, 'Track cheapest nonstop, not cheapest overall')),
+    ),
+  );
+
+  const save = el('button', { className: 'btn btn--go', type: 'submit', disabled: true }, 'Save changes');
+  const note = el('p', { className: 'edit__note' },
+    `Route and dates aren't editable — the price history below belongs to this trip. Track different dates as a new watch.`);
+  form.append(el('div', { className: 'edit__actions' }, save, note));
+
+  // Only enable Save once something actually differs from the saved state.
+  const initial = new FormData(form);
+  const snapshot = (fd) => JSON.stringify([...fd.entries()]);
+  const baseline = snapshot(initial);
+  const onChange = () => {
+    save.disabled = snapshot(new FormData(form)) === baseline;
+  };
+  form.addEventListener('input', onChange);
+  form.addEventListener('change', onChange);
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const fd = new FormData(form);
+    const num = (k) => (fd.get(k) === '' ? null : Number(fd.get(k)));
+
+    save.disabled = true;
+    save.textContent = 'Saving…';
+    try {
+      await api(`/api/watches/${encodeURIComponent(w.id)}`, {
+        method: 'PATCH',
+        body: {
+          label: fd.get('label') || null,
+          intervalMinutes: num('intervalMinutes'),
+          maxStops: fd.get('maxStops') === '' ? null : fd.get('maxStops'),
+          trackNonstopOnly: fd.has('trackNonstopOnly'),
+          alert: {
+            targetPrice: num('targetPrice'),
+            dropPercent: num('dropPercent'),
+            dropAmount: num('dropAmount'),
+            cooldownMinutes: num('cooldownMinutes'),
+            notifyOnNewLow: fd.has('notifyOnNewLow'),
+            notifyOnRise: fd.has('notifyOnRise'),
+          },
+        },
+      });
+      toast(`Saved — ${w.from} → ${w.to} updated.`, 'good');
+      await refresh();
+    } catch (err) {
+      toast(err.message, 'error');
+      save.disabled = false;
+      save.textContent = 'Save changes';
+    }
+  });
+
+  return form;
+}
 
 /* ── Airport autocomplete ─────────────────────────────────────── */
 
