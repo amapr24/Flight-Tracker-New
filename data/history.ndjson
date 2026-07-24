@@ -1,3 +1,4 @@
 {"k":"p","w":"sju-mia-2026-08-07","t":"2026-07-24T02:03:50.253Z","p":102,"c":"USD","n":102,"l":"typical","r":7}
-{"k":"p","w":"sju-mia-2026-08-07","t":"2026-07-24T02:11:07.143Z","p":102,"c":"USD","n":102,"l":"typical","r":7,"b":{"price":102,"airlines":"Frontier","stops":0,"durationText":"2 hr 45 min","departTime":"7:10 AM","departDay":"Friday, August 7","arriveTime":"9:55 AM","arriveDay":"Friday, August 7","flightNumbers":["F93377"],"co2Kg":112}}
+{"k":"p","w":"sju-mia-2026-08-07","t":"2026-07-24T02:11:07.143Z","p":102,"c":"USD","n":102,"l":"typical","r":7}
+{"k":"p","w":"sju-mia-2026-08-07","t":"2026-07-24T02:12:54.798Z","p":102,"c":"USD","n":102,"l":"typical","r":7,"b":{"price":102,"airlines":"Frontier","stops":0,"durationText":"2 hr 45 min","departTime":"7:10 AM","departDay":"Friday, August 7","arriveTime":"9:55 AM","arriveDay":"Friday, August 7","flightNumbers":["F93377"],"co2Kg":112}}
 {"k":"a","w":"sju-mia-2026-08-07","t":"2026-07-24T02:03:50.288Z","r":"first-seen","p":102,"m":"👀 $102 · SJU → MIA 2026-08-07"}
