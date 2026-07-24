@@ -12,12 +12,17 @@
       "adults": 1,
       "seat": "economy",
       "maxStops": "nonstop",
-      "intervalMinutes": 30,
+      "intervalMinutes": 60,
       "alert": {
         "targetPrice": 95,
         "notifyOnNewLow": true,
-        "notifyOnRise": false
-      }
+        "notifyOnRise": false,
+        "dropPercent": 5,
+        "dropAmount": 15,
+        "cooldownMinutes": 180
+      },
+      "label": "SJU → MIA 2026-08-07",
+      "trackNonstopOnly": false
     },
     {
       "id": "mia-sju-2026-08-24",
