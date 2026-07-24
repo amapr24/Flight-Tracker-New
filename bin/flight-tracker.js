@@ -35,6 +35,7 @@ const { values: flags, positionals } = parseArgs({
     'no-open': { type: 'boolean', default: false },
     'no-poll': { type: 'boolean', default: false },
     'keep-days': { type: 'string' },
+    orphans: { type: 'boolean', default: false },
     help: { type: 'boolean', short: 'h', default: false },
   },
 });
@@ -59,6 +60,7 @@ ${c.bold('COMMANDS')}
   ${c.cyan('import')} [file]             Load price history from NDJSON (for stateless CI runs)
   ${c.cyan('export')} [file]             Write price history to NDJSON
   ${c.cyan('prune')}                     Drop observations older than a year
+  ${c.cyan('prune')} --orphans           Drop history for watches no longer in the config
   ${c.cyan('help')}                      This message
 
 ${c.bold('OPTIONS')}
@@ -70,7 +72,8 @@ ${c.bold('OPTIONS')}
   --port <n>                serve: dashboard port (default 4127)
   --no-open                 serve: don't open a browser
   --no-poll                 serve: dashboard only, no background checking
-  --keep-days <n>           export: drop records older than n days first
+  --keep-days <n>           export/prune: drop records older than n days
+  --orphans                 prune: drop history for watches not in the config
 
 ${c.bold('EXAMPLES')}
   flight-tracker serve
@@ -423,8 +426,26 @@ async function cmdPrune() {
   const config = resolveConfig();
   const store = openDb(config.databasePath);
   try {
-    const { observations, failures } = store.prune({ keepDays: 365 });
-    console.log(c.gray(`\n  Removed ${observations} observation(s) and ${failures} failure(s) older than a year.\n`));
+    if (flags.orphans) {
+      const ids = config.watches.map((w) => w.id);
+      const { watches, observations, alerts } = store.pruneOrphans(ids);
+      if (watches.length === 0) {
+        console.log(c.gray('\n  No orphaned history — every record belongs to a configured watch.\n'));
+      } else {
+        console.log(
+          c.gray(`\n  Removed ${observations} observation(s) and ${alerts} alert(s) for `) +
+            watches.map((w) => c.yellow(w)).join(', ') +
+            c.gray(' (no longer in the config).\n'),
+        );
+      }
+      return;
+    }
+
+    const keepDays = Number(flags['keep-days'] ?? 365);
+    const { observations, failures } = store.prune({ keepDays });
+    console.log(
+      c.gray(`\n  Removed ${observations} observation(s) and ${failures} failure(s) older than ${keepDays} days.\n`),
+    );
   } finally {
     store.close();
   }

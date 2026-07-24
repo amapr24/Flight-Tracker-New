@@ -117,3 +117,41 @@ test('prune drops rows past the retention window and keeps the rest', () => {
   assert.equal(store.stats('w1').count, 1);
   store.close();
 });
+
+test('pruneOrphans removes history only for watches that no longer exist', () => {
+  const store = openDb(':memory:');
+  store.recordObservation(sample(300));
+  store.recordObservation({ ...sample(900), watchId: 'gone' });
+  store.recordAlert({ watchId: 'gone', reason: 'new-low', price: 900 });
+  store.recordAlert({ watchId: 'w1', reason: 'new-low', price: 300 });
+
+  const result = store.pruneOrphans(['w1']);
+
+  assert.deepEqual(result.watches, ['gone']);
+  assert.equal(result.observations, 1);
+  assert.equal(result.alerts, 1);
+  assert.equal(store.stats('gone'), null, 'the orphan is gone');
+  assert.equal(store.stats('w1').count, 1, 'the live watch is untouched');
+  assert.equal(store.lastAlert('w1').price, 300);
+  store.close();
+});
+
+test('pruneOrphans finds a watch that has alerts but no observations', () => {
+  const store = openDb(':memory:');
+  store.recordAlert({ watchId: 'alerts-only', reason: 'new-low', price: 100 });
+
+  const result = store.pruneOrphans([]);
+  assert.deepEqual(result.watches, ['alerts-only']);
+  assert.equal(result.alerts, 1);
+  store.close();
+});
+
+test('pruneOrphans is a no-op when every watch is configured', () => {
+  const store = openDb(':memory:');
+  store.recordObservation(sample(300));
+
+  const result = store.pruneOrphans(['w1']);
+  assert.deepEqual(result, { watches: [], observations: 0, alerts: 0 });
+  assert.equal(store.stats('w1').count, 1);
+  store.close();
+});

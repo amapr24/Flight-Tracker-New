@@ -302,6 +302,42 @@ export class PriceStore {
       .map((r) => r.watch_id);
   }
 
+  /**
+   * Drops all history for watches that no longer exist in the config.
+   *
+   * Deleting a watch deliberately keeps its history, so you can re-add the same
+   * route later and still have the record. That means orphans accumulate, and
+   * clearing them has to be an explicit choice rather than a side effect of
+   * any routine export.
+   *
+   * @param {string[]} knownWatchIds ids currently present in the config
+   */
+  pruneOrphans(knownWatchIds) {
+    const known = new Set(knownWatchIds);
+    // Union both tables: a watch could have alert rows but no observations.
+    const present = this.#db
+      .prepare(
+        `SELECT watch_id FROM observations
+         UNION SELECT watch_id FROM alerts
+         ORDER BY watch_id`,
+      )
+      .all()
+      .map((r) => r.watch_id);
+    const orphans = present.filter((id) => !known.has(id));
+    if (orphans.length === 0) return { watches: [], observations: 0, alerts: 0 };
+
+    const placeholders = orphans.map(() => '?').join(', ');
+    const observations = this.#db
+      .prepare(`DELETE FROM observations WHERE watch_id IN (${placeholders})`)
+      .run(...orphans).changes;
+    const alerts = this.#db
+      .prepare(`DELETE FROM alerts WHERE watch_id IN (${placeholders})`)
+      .run(...orphans).changes;
+    this.#db.prepare(`DELETE FROM failures WHERE watch_id IN (${placeholders})`).run(...orphans);
+
+    return { watches: orphans, observations, alerts };
+  }
+
   /** Keeps the database from growing without bound on a long-running daemon. */
   prune({ keepDays = 365 } = {}) {
     const cutoff = new Date(Date.now() - keepDays * 86_400_000).toISOString();

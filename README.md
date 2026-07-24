@@ -99,7 +99,7 @@ node bin/flight-tracker.js <command>
 | `test-notify` | Send a test push to verify Pushover is wired up. |
 | `import [file]` | Rebuild history from NDJSON. Used by CI; also moves data between machines. |
 | `export [file]` | Write history to NDJSON. |
-| `prune` | Drop observations older than a year. |
+| `prune` | Drop observations older than a year. `--orphans` drops history for routes no longer in the config. |
 
 Useful flags: `--dry-run` prints notifications instead of sending them, `--no-notify` records history silently, `--config <path>` points at a different config file. For `serve`: `--port`, `--no-open`, `--no-poll`.
 
@@ -170,6 +170,14 @@ directly — useful for bulk changes or version control.
 | `trackNonstopOnly` | `false` | Alert on the cheapest *nonstop* rather than the cheapest fare overall. |
 | `intervalMinutes` | `30` | Minimum 5. |
 | `enabled` | `true` | Set `false` to keep a watch on file without polling it. |
+
+Deleting a route keeps its price history, so you can re-add the same trip later
+and still have the record. That history becomes orphaned, and clearing it is a
+deliberate step rather than something any routine command does behind your back:
+
+```bash
+node bin/flight-tracker.js prune --orphans
+```
 
 ### Alert fields
 
@@ -334,7 +342,7 @@ need a `pushoverUser` field per watch, which isn't built yet.
 npm test
 ```
 
-125 tests. Parsing runs against a real captured Google Flights response (`test/fixtures/`), so a change in Google's markup fails the suite rather than silently producing no prices. The server tests boot the real HTTP server on an ephemeral port and include the Host/Origin guards.
+128 tests. Parsing runs against a real captured Google Flights response (`test/fixtures/`), so a change in Google's markup fails the suite rather than silently producing no prices. The server tests boot the real HTTP server on an ephemeral port and include the Host/Origin guards.
 
 ## How it works
 
