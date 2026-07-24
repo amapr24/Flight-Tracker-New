@@ -21,6 +21,7 @@ import { checkAll, checkWatch, summariseLine } from '../src/runner.js';
 import { startDaemon } from '../src/daemon.js';
 import { searchFlights } from '../src/google-flights.js';
 import { buildSearchUrl } from '../src/tfs.js';
+import { describe as describeAirport } from '../src/airports.js';
 import { c, money, sparkline, formatItinerary, relativeTime } from '../src/format.js';
 
 const { values: flags, positionals } = parseArgs({
@@ -59,6 +60,7 @@ ${c.bold('COMMANDS')}
   ${c.cyan('test-notify')}               Send a test notification to confirm Pushover works
   ${c.cyan('import')} [file]             Load price history from NDJSON (for stateless CI runs)
   ${c.cyan('export')} [file]             Write price history to NDJSON
+  ${c.cyan('site-data')} [file]          Write the JSON the published viewer reads
   ${c.cyan('prune')}                     Drop observations older than a year
   ${c.cyan('prune')} --orphans           Drop history for watches no longer in the config
   ${c.cyan('help')}                      This message
@@ -422,6 +424,67 @@ async function cmdExport() {
   }
 }
 
+/**
+ * Emits everything the static viewer needs as one JSON file.
+ *
+ * The deep links are built here rather than in the browser so the published
+ * page stays a pure renderer — no protobuf encoder, no API, nothing to break
+ * when it is served from a CDN with no server behind it.
+ */
+async function cmdSiteData() {
+  const config = resolveConfig();
+  const file = resolve(PROJECT_ROOT, positionals[1] ?? 'site/data.json');
+  const store = openDb(config.databasePath);
+
+  try {
+    const watches = config.watches.map((w) => {
+      const series = store.history(w.id, { limit: 1000 }).reverse();
+      const latest = series.at(-1) ?? null;
+      const previous = series.length > 1 ? series.at(-2) : null;
+
+      return {
+        id: w.id,
+        label: w.label,
+        from: w.from,
+        to: w.to,
+        fromLabel: describeAirport(w.from),
+        toLabel: describeAirport(w.to),
+        depart: w.depart,
+        return: w.return,
+        enabled: w.enabled,
+        nonstopOnly: w.maxStops === 'nonstop' || w.trackNonstopOnly,
+        target: w.alert?.targetPrice ?? null,
+        searchUrl: buildSearchUrl(w, { currency: config.defaults.currency }),
+        latest: latest
+          ? {
+              price: latest.price,
+              observedAt: latest.observedAt,
+              priceLevel: latest.priceLevel,
+              change: previous ? latest.price - previous.price : null,
+              best: latest.best,
+            }
+          : null,
+        stats: store.stats(w.id),
+        series: series.map((s) => ({ t: s.observedAt, p: s.price })),
+      };
+    });
+
+    const payload = {
+      generatedAt: new Date().toISOString(),
+      currency: config.defaults.currency,
+      watches,
+    };
+
+    mkdirSync(dirname(file), { recursive: true });
+    writeFileSync(file, `${JSON.stringify(payload)}\n`);
+    console.log(
+      c.gray(`\n  Wrote site data for ${watches.length} watch(es) to ${file}.\n`),
+    );
+  } finally {
+    store.close();
+  }
+}
+
 async function cmdPrune() {
   const config = resolveConfig();
   const store = openDb(config.databasePath);
@@ -463,6 +526,7 @@ const COMMANDS = {
   'test-notify': cmdTestNotify,
   import: cmdImport,
   export: cmdExport,
+  'site-data': cmdSiteData,
   prune: cmdPrune,
   help: async () => console.log(HELP),
 };

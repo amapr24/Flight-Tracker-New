@@ -99,6 +99,7 @@ node bin/flight-tracker.js <command>
 | `test-notify` | Send a test push to verify Pushover is wired up. |
 | `import [file]` | Rebuild history from NDJSON. Used by CI; also moves data between machines. |
 | `export [file]` | Write history to NDJSON. |
+| `site-data [file]` | Write the JSON the published viewer reads. Used by the Pages build. |
 | `prune` | Drop observations older than a year. `--orphans` drops history for routes no longer in the config. |
 
 Useful flags: `--dry-run` prints notifications instead of sending them, `--no-notify` records history silently, `--config <path>` points at a different config file. For `serve`: `--port`, `--no-open`, `--no-poll`.
@@ -323,6 +324,28 @@ You can move history between machines the same way:
 ```bash
 node bin/flight-tracker.js export data/history.ndjson
 ```
+
+### Viewing prices from your phone
+
+`.github/workflows/pages.yml` publishes a **read-only** viewer to GitHub Pages —
+route cards, price history charts with the target marked, and a link straight to
+the booking page. No laptop needed to look at it.
+
+It rebuilds whenever the tracker commits new prices. Enable it once under
+Settings → Pages → **Source: GitHub Actions**, and it lands at
+`https://<user>.github.io/<repo>/`.
+
+The full dashboard can't be published this way, and it's worth understanding
+why: it's a client for a local API that writes `watches.json`, runs searches and
+holds your Pushover credentials. Static hosting can provide none of that, and a
+browser can't call Google Flights directly (no CORS headers). So the published
+page is a pure renderer — the deep links and stats are computed at build time by
+`flight-tracker site-data` and baked into one JSON file.
+
+**On a public repo the page is public too.** It shows your routes, dates and
+recorded prices. No credentials are ever included, but if you'd rather not
+publish that, make the repo private (Actions minutes then apply) or drop
+`.github/workflows/pages.yml`.
 
 ### Sharing it with friends
 

@@ -1,0 +1,63 @@
+name: Publish price history
+
+# Rebuilds the read-only viewer whenever the tracker records new prices.
+# The check workflow commits data/history.ndjson, which lands as a push to main
+# and triggers this. Path-filtered so unrelated commits don't redeploy.
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'data/history.ndjson'
+      - 'watches.json'
+      - 'web/viewer.html'
+      - '.github/workflows/pages.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Never cancel a deploy midway; just queue the next one.
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '24'
+
+      - uses: actions/configure-pages@v6
+
+      - name: Rebuild the database from committed history
+        run: node bin/flight-tracker.js import
+
+      # The viewer is a pure renderer: deep links and stats are computed here,
+      # so the published page needs no API and no protobuf encoder.
+      - name: Build the site
+        run: |
+          set -euo pipefail
+          mkdir -p _site
+          cp web/viewer.html _site/index.html
+          node bin/flight-tracker.js site-data _site/data.json
+          # Jekyll would otherwise try to process this and ignore some files.
+          touch _site/.nojekyll
+          ls -la _site
+
+      - uses: actions/upload-pages-artifact@v5
+        with:
+          path: _site
+
+      - id: deploy
+        uses: actions/deploy-pages@v5
