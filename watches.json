@@ -26,12 +26,18 @@
       "depart": "2026-08-24",
       "adults": 1,
       "seat": "economy",
-      "intervalMinutes": 30,
+      "intervalMinutes": 60,
       "alert": {
         "targetPrice": 75,
         "notifyOnNewLow": true,
-        "notifyOnRise": false
-      }
+        "notifyOnRise": false,
+        "dropPercent": 5,
+        "dropAmount": 15,
+        "cooldownMinutes": 180
+      },
+      "label": "MIA → SJU 2026-08-23",
+      "trackNonstopOnly": false,
+      "maxStops": "nonstop"
     }
   ]
 }
