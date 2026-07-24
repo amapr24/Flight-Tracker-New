@@ -1,0 +1,23 @@
+{
+  "defaults": {
+    "intervalMinutes": 30,
+    "currency": "USD"
+  },
+  "watches": [
+    {
+      "id": "sju-mia-2026-08-07",
+      "from": "SJU",
+      "to": "MIA",
+      "depart": "2026-08-07",
+      "adults": 1,
+      "seat": "economy",
+      "maxStops": "nonstop",
+      "intervalMinutes": 30,
+      "alert": {
+        "targetPrice": 95,
+        "notifyOnNewLow": true,
+        "notifyOnRise": false
+      }
+    }
+  ]
+}

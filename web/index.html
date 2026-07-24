@@ -1,0 +1,189 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Flight Tracker</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans+Condensed:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="/styles.css" />
+    <link
+      rel="icon"
+      href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>✈️</text></svg>"
+    />
+  </head>
+  <body>
+    <div class="grain" aria-hidden="true"></div>
+
+    <header class="masthead">
+      <div class="masthead__inner">
+        <h1 class="brand">
+          <span class="brand__glyph" aria-hidden="true">✈</span>
+          <span class="brand__name">FLIGHT<em>TRACKER</em></span>
+        </h1>
+
+        <div class="masthead__right">
+          <p class="status" id="status" data-state="loading">
+            <span class="status__dot" aria-hidden="true"></span>
+            <span class="status__text">Connecting…</span>
+          </p>
+          <button class="btn btn--primary" id="new-watch-btn" type="button">
+            <span aria-hidden="true">+</span> New watch
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <main class="shell">
+      <!-- ── Composer ─────────────────────────────────────────────── -->
+      <section class="composer" id="composer" hidden aria-label="Add a watch">
+        <div class="composer__head">
+          <h2 class="composer__title">Track a route</h2>
+          <button class="btn btn--ghost" id="composer-close" type="button" aria-label="Close">
+            Cancel
+          </button>
+        </div>
+
+        <form class="composer__form" id="composer-form" autocomplete="off">
+          <div class="route">
+            <div class="field field--airport">
+              <label for="from">From</label>
+              <input
+                type="text"
+                id="from"
+                name="from"
+                placeholder="City or code"
+                spellcheck="false"
+                required
+              />
+              <p class="field__hint" id="from-hint">&nbsp;</p>
+              <ul class="ac" id="from-ac" role="listbox" hidden></ul>
+            </div>
+
+            <button class="swap" id="swap" type="button" aria-label="Swap origin and destination">
+              <span aria-hidden="true">⇄</span>
+            </button>
+
+            <div class="field field--airport">
+              <label for="to">To</label>
+              <input
+                type="text"
+                id="to"
+                name="to"
+                placeholder="City or code"
+                spellcheck="false"
+                required
+              />
+              <p class="field__hint" id="to-hint">&nbsp;</p>
+              <ul class="ac" id="to-ac" role="listbox" hidden></ul>
+            </div>
+          </div>
+
+          <div class="segmented" role="radiogroup" aria-label="Trip type">
+            <label><input type="radio" name="trip" value="one-way" checked /><span>One way</span></label>
+            <label><input type="radio" name="trip" value="round-trip" /><span>Round trip</span></label>
+          </div>
+
+          <div class="grid grid--dates">
+            <div class="field">
+              <label for="depart">Depart</label>
+              <input type="date" id="depart" name="depart" required />
+            </div>
+            <div class="field" id="return-field" hidden>
+              <label for="return">Return</label>
+              <input type="date" id="return" name="return" />
+            </div>
+          </div>
+
+          <details class="advanced">
+            <summary>Passengers, cabin &amp; stops</summary>
+            <div class="grid grid--advanced">
+              <div class="field">
+                <label for="adults">Adults</label>
+                <input type="number" id="adults" name="adults" min="1" max="9" value="1" />
+              </div>
+              <div class="field">
+                <label for="seat">Cabin</label>
+                <select id="seat" name="seat">
+                  <option value="economy">Economy</option>
+                  <option value="premium-economy">Premium economy</option>
+                  <option value="business">Business</option>
+                  <option value="first">First</option>
+                </select>
+              </div>
+              <div class="field">
+                <label for="maxStops">Stops</label>
+                <select id="maxStops" name="maxStops">
+                  <option value="">Any</option>
+                  <option value="nonstop">Nonstop only</option>
+                  <option value="1">1 stop or fewer</option>
+                  <option value="2">2 stops or fewer</option>
+                </select>
+              </div>
+              <div class="field">
+                <label for="intervalMinutes">Check every</label>
+                <select id="intervalMinutes" name="intervalMinutes">
+                  <option value="15">15 minutes</option>
+                  <option value="20">20 minutes</option>
+                  <option value="30" selected>30 minutes</option>
+                  <option value="60">1 hour</option>
+                  <option value="180">3 hours</option>
+                  <option value="360">6 hours</option>
+                </select>
+              </div>
+            </div>
+          </details>
+
+          <div class="composer__actions">
+            <button class="btn btn--primary btn--wide" id="preview-btn" type="submit">
+              Check prices now
+            </button>
+            <p class="composer__note">
+              Runs a real search first, so you can see the fare before committing to track it.
+            </p>
+          </div>
+        </form>
+
+        <!-- Live preview, revealed after a search -->
+        <div class="preview" id="preview" hidden>
+          <div class="preview__summary" id="preview-summary"></div>
+          <ol class="preview__list" id="preview-list"></ol>
+
+          <form class="save" id="save-form">
+            <div class="field field--target">
+              <label for="targetPrice">Alert me at or below</label>
+              <div class="money-input">
+                <span aria-hidden="true">$</span>
+                <input type="number" id="targetPrice" name="targetPrice" min="0" step="1" />
+              </div>
+              <p class="field__hint" id="target-hint">&nbsp;</p>
+            </div>
+            <button class="btn btn--go" type="submit" id="save-btn">Start tracking</button>
+          </form>
+        </div>
+      </section>
+
+      <!-- ── Board ────────────────────────────────────────────────── -->
+      <section class="board" aria-label="Tracked routes">
+        <div class="board__head" aria-hidden="true">
+          <span>Route</span>
+          <span>Dates</span>
+          <span class="board__head--right">Current</span>
+          <span class="board__head--right">Trend</span>
+          <span></span>
+        </div>
+        <div id="board-body"></div>
+      </section>
+
+      <p class="footnote" id="footnote"></p>
+    </main>
+
+    <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
+
+    <script type="module" src="/app.js"></script>
+  </body>
+</html>

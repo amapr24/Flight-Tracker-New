@@ -1,0 +1,99 @@
+name: Check flight prices
+
+# Triggered externally (cron-job.org or similar), NOT by GitHub's own `schedule:`.
+# GitHub queues scheduled workflows on a shared pool and commonly runs them
+# 10-30 minutes late, which would recreate exactly the delay this project exists
+# to avoid. An external POST to the dispatch API starts a run within seconds.
+#
+#   curl -X POST https://api.github.com/repos/OWNER/REPO/dispatches \
+#     -H "Authorization: Bearer $TOKEN" \
+#     -H "Accept: application/vnd.github+json" \
+#     -d '{"event_type":"check-flights"}'
+on:
+  repository_dispatch:
+    types: [check-flights]
+  workflow_dispatch:
+
+# Runs must not overlap: two jobs pushing history at once would conflict.
+concurrency:
+  group: flight-price-check
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          # 24 has node:sqlite unflagged; on 22.x it needs --experimental-sqlite.
+          node-version: '24'
+
+      - name: Restore price history
+        run: node bin/flight-tracker.js import
+
+      # Continues on failure so history is still saved and the failure is
+      # reported in the summary rather than just aborting the job.
+      - name: Check prices
+        id: check
+        continue-on-error: true
+        env:
+          PUSHOVER_TOKEN: ${{ secrets.PUSHOVER_TOKEN }}
+          PUSHOVER_USER_KEY: ${{ secrets.PUSHOVER_USER_KEY }}
+          PUSHOVER_DEVICE: ${{ secrets.PUSHOVER_DEVICE }}
+        run: node bin/flight-tracker.js check 2>&1 | tee check-output.txt
+
+      - name: Save price history
+        if: always()
+        run: node bin/flight-tracker.js export --keep-days 180
+
+      - name: Commit updated history
+        if: always()
+        run: |
+          set -euo pipefail
+          git config user.name  "flight-tracker"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data/history.ndjson
+          if git diff --staged --quiet; then
+            echo "No new prices to record."
+            exit 0
+          fi
+          git commit -m "prices: $(date -u '+%Y-%m-%d %H:%MZ')"
+          # Serialised by `concurrency`, but a retry costs nothing if a run overlaps.
+          for attempt in 1 2 3; do
+            if git push; then exit 0; fi
+            echo "Push rejected (attempt $attempt) — rebasing onto origin."
+            git pull --rebase --autostash
+          done
+          echo "::error::Could not push updated price history after 3 attempts."
+          exit 1
+
+      - name: Report result
+        if: always()
+        run: |
+          {
+            echo "## Flight price check"
+            echo ""
+            echo '```'
+            cat check-output.txt 2>/dev/null || echo "(no output captured)"
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+
+          if grep -qiE 'consent|captcha|unusual traffic|HTTP 429' check-output.txt 2>/dev/null; then
+            echo "::error::Google served a consent/captcha page instead of results."
+            echo "GitHub runners use Azure datacenter IPs, which are bot-flagged far more"
+            echo "aggressively than a home connection. If this keeps happening, run the"
+            echo "tracker from a machine on your own network instead."
+            exit 1
+          fi
+
+          if [ "${{ steps.check.outcome }}" != "success" ]; then
+            echo "::error::One or more routes failed to check. See the output above."
+            exit 1
+          fi

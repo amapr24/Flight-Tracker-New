@@ -1,0 +1,14 @@
+# Secrets. Never commit this — Pushover credentials belong in repo secrets.
+.env
+
+# The SQLite database is a local build artifact, rebuilt from history.ndjson.
+data/*
+!data/history.ndjson
+
+# watches.json IS tracked: it defines what to track and contains no secrets,
+# and CI needs to read it. Fork the repo to keep your own routes and keys.
+
+logs/
+node_modules/
+*.log
+.DS_Store

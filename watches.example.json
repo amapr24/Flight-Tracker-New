@@ -1,0 +1,69 @@
+{
+  "defaults": {
+    "intervalMinutes": 30,
+    "currency": "USD",
+    "database": "data/prices.db",
+    "jitterSeconds": 90,
+    "staggerSeconds": 8,
+    "quietHours": {
+      "start": "23:00",
+      "end": "07:00",
+      "timezone": "America/Puerto_Rico",
+      "allowUrgent": true
+    },
+    "sounds": {
+      "target-hit": "cashregister",
+      "new-low": "magic"
+    }
+  },
+  "watches": [
+    {
+      "id": "sju-jfk-august",
+      "label": "San Juan → New York (Aug 15)",
+      "from": "SJU",
+      "to": "JFK",
+      "depart": "2026-08-15",
+      "intervalMinutes": 20,
+      "alert": {
+        "targetPrice": 200,
+        "dropPercent": 8,
+        "dropAmount": 25,
+        "cooldownMinutes": 180
+      }
+    },
+    {
+      "id": "sju-mad-roundtrip",
+      "label": "San Juan → Madrid (Oct, round trip)",
+      "from": "SJU",
+      "to": "MAD",
+      "depart": "2026-10-03",
+      "return": "2026-10-17",
+      "adults": 2,
+      "seat": "economy",
+      "maxStops": 1,
+      "intervalMinutes": 60,
+      "alert": {
+        "targetPrice": 900,
+        "dropPercent": 10,
+        "dropAmount": 75,
+        "notifyOnRise": true,
+        "risePercent": 20
+      }
+    },
+    {
+      "id": "sju-lax-nonstop-only",
+      "label": "San Juan → Los Angeles (nonstop watch)",
+      "from": "SJU",
+      "to": "LAX",
+      "depart": "2026-12-19",
+      "return": "2027-01-04",
+      "trackNonstopOnly": true,
+      "intervalMinutes": 45,
+      "enabled": false,
+      "alert": {
+        "targetPrice": 450,
+        "notifyOnNewLow": true
+      }
+    }
+  ]
+}

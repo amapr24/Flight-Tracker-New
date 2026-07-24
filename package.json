@@ -1,0 +1,19 @@
+{
+  "name": "flight-tracker",
+  "version": "1.0.0",
+  "description": "Polls Google Flights on a set interval and pushes price alerts to Pushover — without the delay of Google's price-tracking emails.",
+  "type": "module",
+  "bin": {
+    "flight-tracker": "./bin/flight-tracker.js"
+  },
+  "scripts": {
+    "check": "node --no-warnings=ExperimentalWarning bin/flight-tracker.js check",
+    "watch": "node --no-warnings=ExperimentalWarning bin/flight-tracker.js watch",
+    "test": "node --test \"test/*.test.js\""
+  },
+  "engines": {
+    "node": ">=22.5.0"
+  },
+  "dependencies": {},
+  "private": true
+}
