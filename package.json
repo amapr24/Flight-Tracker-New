@@ -12,8 +12,9 @@
     "test": "node --test \"test/*.test.js\""
   },
   "engines": {
-    "node": ">=22.5.0"
+    "node": ">=24.0.0"
   },
   "dependencies": {},
+  "license": "MIT",
   "private": true
 }

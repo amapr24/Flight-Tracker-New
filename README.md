@@ -19,9 +19,8 @@ No API keys, no paid scraping service, and no dependencies — it reads the same
 
 ## Requirements
 
-- **Node.js 24** (or 23.x). Uses the built-in `node:sqlite`, which is unflagged
-  from Node 23 onward; on 22.5–22.x it exists but needs `--experimental-sqlite`.
-  Check with `node --version`.
+- **Node.js 24+**. Uses the built-in `node:sqlite`, so there are no dependencies
+  to install. Check with `node --version`.
 - A free **Pushover** account, plus the app on your phone (one-time ~$5 per platform).
 
 ## Setup
@@ -358,3 +357,10 @@ This reads Google Flights' public web page. That means:
 - **Be reasonable with intervals.** The 5-minute floor is deliberate. Every request is jittered, staggered across watches, and rotates its user-agent. A handful of routes at 20–30 minutes is unremarkable traffic; polling every route every minute is not, and will get you rate-limited.
 - **Google can change the markup.** If they do, the parser breaks — you'll get a "checks failing" push rather than silence, and `npm test` will point at what changed.
 - **Prices are Google's, not a booking guarantee.** Fares move between search and checkout. The notification links straight back to the exact search so you can confirm before booking.
+
+## License
+
+MIT — see [LICENSE](LICENSE). Use it, fork it, change it.
+
+The license covers this code only. It says nothing about Google's terms for the
+page it reads; that's between you and Google.
