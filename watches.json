@@ -18,6 +18,20 @@
         "notifyOnNewLow": true,
         "notifyOnRise": false
       }
+    },
+    {
+      "id": "mia-sju-2026-08-24",
+      "from": "MIA",
+      "to": "SJU",
+      "depart": "2026-08-24",
+      "adults": 1,
+      "seat": "economy",
+      "intervalMinutes": 30,
+      "alert": {
+        "targetPrice": 75,
+        "notifyOnNewLow": true,
+        "notifyOnRise": false
+      }
     }
   ]
 }
