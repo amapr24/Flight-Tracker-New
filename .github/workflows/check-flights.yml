@@ -13,6 +13,11 @@ on:
   repository_dispatch:
     types: [check-flights]
   workflow_dispatch:
+    inputs:
+      test_notification:
+        description: 'Also send a Pushover test push (proves delivery works)'
+        type: boolean
+        default: false
 
 # Runs must not overlap: two jobs pushing history at once would conflict.
 concurrency:
@@ -34,6 +39,17 @@ jobs:
         with:
           # 24 has node:sqlite unflagged; on 22.x it needs --experimental-sqlite.
           node-version: '24'
+
+      # Opt-in, because a routine check legitimately sends nothing when no alert
+      # condition is met — which leaves delivery itself unproven. This fails
+      # hard on bad credentials rather than falling back to console output.
+      - name: Send test notification
+        if: inputs.test_notification
+        env:
+          PUSHOVER_TOKEN: ${{ secrets.PUSHOVER_TOKEN }}
+          PUSHOVER_USER_KEY: ${{ secrets.PUSHOVER_USER_KEY }}
+          PUSHOVER_DEVICE: ${{ secrets.PUSHOVER_DEVICE }}
+        run: node bin/flight-tracker.js test-notify
 
       - name: Restore price history
         run: node bin/flight-tracker.js import
