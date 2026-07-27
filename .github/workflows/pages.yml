@@ -4,13 +4,10 @@ name: Publish price history
 # The check workflow commits data/history.ndjson, which lands as a push to main
 # and triggers this. Path-filtered so unrelated commits don't redeploy.
 on:
-  push:
+  workflow_run:
+    workflows: ["Check flight prices"]
+    types: [completed]
     branches: [main]
-    paths:
-      - 'data/history.ndjson'
-      - 'watches.json'
-      - 'web/viewer.html'
-      - '.github/workflows/pages.yml'
   workflow_dispatch:
 
 permissions:
@@ -25,6 +22,7 @@ concurrency:
 
 jobs:
   publish:
+    if: github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success'
     runs-on: ubuntu-latest
     timeout-minutes: 10
     environment:
