@@ -305,8 +305,10 @@
 {"k":"p","w":"mia-sju-2026-08-24","t":"2026-08-05T10:00:23.431Z","p":79,"c":"USD","n":79,"l":"typical","r":7}
 {"k":"p","w":"sju-mia-2026-08-07","t":"2026-08-05T12:00:15.974Z","p":207,"c":"USD","n":207,"l":"high","r":7}
 {"k":"p","w":"mia-sju-2026-08-24","t":"2026-08-05T12:00:24.500Z","p":79,"c":"USD","n":79,"l":"typical","r":7}
-{"k":"p","w":"sju-mia-2026-08-07","t":"2026-08-05T14:00:19.734Z","p":207,"c":"USD","n":207,"l":"high","r":7,"b":{"price":207,"airlines":"Frontier","stops":0,"durationText":"2 hr 45 min","departTime":"7:10 AM","departDay":"Friday, August 7","arriveTime":"9:55 AM","arriveDay":"Friday, August 7","flightNumbers":["F93377"],"co2Kg":112}}
-{"k":"p","w":"mia-sju-2026-08-24","t":"2026-08-05T14:00:28.106Z","p":79,"c":"USD","n":79,"l":"typical","r":7,"b":{"price":79,"airlines":"Frontier","stops":0,"durationText":"2 hr 55 min","departTime":"9:48 PM","departDay":"Monday, August 24","arriveTime":"12:43 AM","arriveDay":"Tuesday, August 25","flightNumbers":["F93378"],"co2Kg":119}}
+{"k":"p","w":"sju-mia-2026-08-07","t":"2026-08-05T14:00:19.734Z","p":207,"c":"USD","n":207,"l":"high","r":7}
+{"k":"p","w":"mia-sju-2026-08-24","t":"2026-08-05T14:00:28.106Z","p":79,"c":"USD","n":79,"l":"typical","r":7}
+{"k":"p","w":"sju-mia-2026-08-07","t":"2026-08-05T16:00:27.071Z","p":207,"c":"USD","n":207,"l":"high","r":7,"b":{"price":207,"airlines":"Frontier","stops":0,"durationText":"2 hr 45 min","departTime":"7:10 AM","departDay":"Friday, August 7","arriveTime":"9:55 AM","arriveDay":"Friday, August 7","flightNumbers":["F93377"],"co2Kg":112}}
+{"k":"p","w":"mia-sju-2026-08-24","t":"2026-08-05T16:00:35.767Z","p":79,"c":"USD","n":79,"l":"typical","r":7,"b":{"price":79,"airlines":"Frontier","stops":0,"durationText":"2 hr 55 min","departTime":"9:48 PM","departDay":"Monday, August 24","arriveTime":"12:43 AM","arriveDay":"Tuesday, August 25","flightNumbers":["F93378"],"co2Kg":119}}
 {"k":"a","w":"sju-mia-2026-08-07","t":"2026-07-24T02:03:50.288Z","r":"first-seen","p":102,"m":"👀 $102 · SJU → MIA 2026-08-07"}
 {"k":"a","w":"mia-sju-2026-08-24","t":"2026-07-24T03:04:20.185Z","r":"first-seen","p":81,"m":"👀 $81 · MIA → SJU 2026-08-24"}
 {"k":"a","w":"mia-sju-2026-08-24","t":"2026-07-24T18:00:25.086Z","r":"new-low","p":79,"pp":81,"m":"📉 New low $79 · MIA → SJU 2026-08-23"}
