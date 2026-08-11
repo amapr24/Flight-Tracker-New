@@ -5,26 +5,6 @@
   },
   "watches": [
     {
-      "id": "sju-mia-2026-08-07",
-      "from": "SJU",
-      "to": "MIA",
-      "depart": "2026-08-07",
-      "adults": 1,
-      "seat": "economy",
-      "maxStops": "nonstop",
-      "intervalMinutes": 60,
-      "alert": {
-        "targetPrice": 95,
-        "notifyOnNewLow": true,
-        "notifyOnRise": false,
-        "dropPercent": 5,
-        "dropAmount": 15,
-        "cooldownMinutes": 180
-      },
-      "label": "SJU → MIA 2026-08-07",
-      "trackNonstopOnly": false
-    },
-    {
       "id": "mia-sju-2026-08-24",
       "from": "MIA",
       "to": "SJU",
@@ -41,7 +21,7 @@
         "cooldownMinutes": 180
       },
       "label": "MIA → SJU 2026-08-23",
-      "trackNonstopOnly": false,
+      "trackNonstopOnly": true,
       "maxStops": "nonstop"
     }
   ]
