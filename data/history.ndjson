@@ -417,7 +417,8 @@
 {"k":"p","w":"mia-sju-2026-08-24","t":"2026-08-13T12:00:17.292Z","p":49,"c":"USD","n":49,"l":"low","r":7}
 {"k":"p","w":"mia-sju-2026-08-24","t":"2026-08-13T14:00:18.641Z","p":49,"c":"USD","n":49,"l":"low","r":7}
 {"k":"p","w":"mia-sju-2026-08-24","t":"2026-08-13T16:00:24.359Z","p":66,"c":"USD","n":66,"l":"low","r":7}
-{"k":"p","w":"mia-sju-2026-08-24","t":"2026-08-13T18:00:15.306Z","p":66,"c":"USD","n":66,"l":"low","r":7,"b":{"price":66,"airlines":"Frontier","stops":0,"durationText":"2 hr 55 min","departTime":"9:48 PM","departDay":"Monday, August 24","arriveTime":"12:43 AM","arriveDay":"Tuesday, August 25","flightNumbers":["F93378"],"co2Kg":119}}
+{"k":"p","w":"mia-sju-2026-08-24","t":"2026-08-13T18:00:15.306Z","p":66,"c":"USD","n":66,"l":"low","r":7}
+{"k":"p","w":"mia-sju-2026-08-24","t":"2026-08-13T20:00:17.940Z","p":66,"c":"USD","n":66,"l":"low","r":7,"b":{"price":66,"airlines":"Frontier","stops":0,"durationText":"2 hr 55 min","departTime":"9:48 PM","departDay":"Monday, August 24","arriveTime":"12:43 AM","arriveDay":"Tuesday, August 25","flightNumbers":["F93378"],"co2Kg":119}}
 {"k":"a","w":"sju-mia-2026-08-07","t":"2026-07-24T02:03:50.288Z","r":"first-seen","p":102,"m":"👀 $102 · SJU → MIA 2026-08-07"}
 {"k":"a","w":"mia-sju-2026-08-24","t":"2026-07-24T03:04:20.185Z","r":"first-seen","p":81,"m":"👀 $81 · MIA → SJU 2026-08-24"}
 {"k":"a","w":"mia-sju-2026-08-24","t":"2026-07-24T18:00:25.086Z","r":"new-low","p":79,"pp":81,"m":"📉 New low $79 · MIA → SJU 2026-08-23"}
